@@ -1,20 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-const API_URL = "http://localhost:8000/api/";
+import { loginApi, registerApi } from "../features/auth/authAPI";
+import { extractErrorMessage } from "../utils/errorHandler";
 
 export const login = createAsyncThunk(
   "login",
   async ({ username, password }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}login/`, {
-        username,
-        password,
-      });
-      localStorage.setItem("token", response.data.access);
-      return response.data;
+      const data = await loginApi({ username, password });
+      localStorage.setItem("token", data.access);
+      return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Login failed");
+      const message = extractErrorMessage(error.response?.data, "Login failed");
+      return rejectWithValue(message);
     }
   }
 );
@@ -23,16 +20,12 @@ export const register = createAsyncThunk(
   "register",
   async ({ username, email, password, user_type }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}register/`, {
-        username,
-        email,
-        password,
-        user_type,
-      });
-      localStorage.setItem("token", response.data.access);
-      return response.data;
+      const data = await registerApi({ username, email, password, user_type });
+      localStorage.setItem("token", data.access);
+      return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Registration failed");
+      const message = extractErrorMessage(error.response?.data, "Registration failed");
+      return rejectWithValue(message);
     }
   }
 );
@@ -52,6 +45,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.userType = null;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -65,7 +59,6 @@ const authSlice = createSlice({
         state.token = action.payload.access;
         state.userType = action.payload.user_type;
         state.user = { user_type: action.payload.user_type };
-        console.log("Auth state after login:", state);
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -89,4 +82,11 @@ const authSlice = createSlice({
 });
 
 export const { logout } = authSlice.actions;
+
+export const selectAuthIsLoading = (state) => state.auth.isLoading;
+export const selectAuthError = (state) => state.auth.error;
+export const selectAuthUser = (state) => state.auth.user;
+export const selectAuthToken = (state) => state.auth.token;
+export const selectAuthUserType = (state) => state.auth.userType;
+
 export default authSlice.reducer;

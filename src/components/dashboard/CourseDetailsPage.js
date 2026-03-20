@@ -1,59 +1,35 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { useSelector } from "react-redux";
-import LessonForm from "../LessonForm";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchInstructorCourseDetails,
+  fetchInstructorEnrollments,
+  selectInstructorCourseDetails,
+  selectInstructorEnrollments,
+  selectDetailsLoading,
+  selectDetailsError,
+} from "../../features/courses/courseSlice";
 
 const CourseDetailsPage = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const [course, setCourse] = useState(null);
-  const [lessons, setLessons] = useState([]);
-  const [enrollments, setEnrollments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showLessonForm, setShowLessonForm] = useState(false);
-  const token = useSelector((state) => state.auth.token);
+  const dispatch = useDispatch();
+
+  const course = useSelector(selectInstructorCourseDetails);
+  const enrollments = useSelector(selectInstructorEnrollments);
+  const isLoading = useSelector(selectDetailsLoading);
+  const error = useSelector(selectDetailsError);
+
+  const token = useSelector((state) => state.auth.token); // Kept for any other usages though not strictly needed for this file now that Axios is abstracted
+
+  const fetchCourseData = useCallback(() => {
+    dispatch(fetchInstructorCourseDetails(courseId));
+    dispatch(fetchInstructorEnrollments(courseId));
+  }, [courseId, dispatch]);
 
   useEffect(() => {
-    const fetchCourseData = async () => {
-      try {
-        setIsLoading(true);
-        const courseResponse = await axios.get(
-          `http://localhost:8000/api/courses/${courseId}/instructor_lessons/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        const enrollmentsResponse = await axios.get(
-          `http://localhost:8000/api/courses/${courseId}/instructor_enrollments/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        setCourse(courseResponse.data);
-        setLessons(courseResponse.data.lessons || []);
-        setEnrollments(enrollmentsResponse.data.enrollments || []);
-
-        console.log("Course response:", courseResponse.data);
-        console.log("Lessons:", courseResponse.data.lessons);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(err.response?.data?.message || "Failed to fetch course data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchCourseData();
-  }, [courseId, token]);
-
-  const handleLessonCreated = (newLesson) => {
-    setLessons([...lessons, newLesson]);
-    setShowLessonForm(false);
-  };
+  }, [fetchCourseData]);
 
   if (isLoading) {
     return (
@@ -81,7 +57,7 @@ const CourseDetailsPage = () => {
           <h1 className="text-3xl font-bold text-gray-900">{course?.title}</h1>
           <button
             onClick={() => navigate("/instructor/dashboard")}
-            className="text-blue-500 hover:text-blue-600 flex items-center"
+            className="text-blue-500 hover:text-blue-600 flex items-center focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded px-2"
           >
             <svg
               className="w-5 h-5 mr-2"
@@ -117,7 +93,7 @@ const CourseDetailsPage = () => {
             Total Lessons
           </h3>
           <p className="text-3xl font-bold text-green-600">
-            {lessons?.length || 0}
+            {course?.lessons?.length || 0}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -135,24 +111,15 @@ const CourseDetailsPage = () => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900">Lessons</h2>
           <button
-            onClick={() => setShowLessonForm(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            onClick={() => navigate(`/instructor/courses/${courseId}/lessons/new`)}
+            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Add Lesson
           </button>
         </div>
 
-        {showLessonForm && (
-          <LessonForm
-            courseId={courseId}
-            token={token}
-            onLessonCreated={handleLessonCreated}
-            onCancel={() => setShowLessonForm(false)}
-          />
-        )}
-
         <div className="space-y-4">
-          {lessons?.map((lesson) => (
+          {course?.lessons?.map((lesson) => (
             <div
               key={lesson.id}
               className="border rounded-lg p-4 hover:border-blue-500"
@@ -167,14 +134,25 @@ const CourseDetailsPage = () => {
               </div>
             </div>
           ))}
+          {(!course?.lessons || course.lessons.length === 0) && (
+            <p className="text-gray-500 text-center py-4">No lessons added yet.</p>
+          )}
         </div>
       </div>
 
       {/* Enrollments Section */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Enrolled Students
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Enrolled Students
+          </h2>
+          <button
+            onClick={() => navigate(`/instructor/courses/${courseId}/enroll`)}
+            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            Enroll Student
+          </button>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">

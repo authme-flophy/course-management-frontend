@@ -10,9 +10,6 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isLoading, error } = useSelector((state) => state.auth);
-  const isInstructor = useSelector(
-    (state) => state.auth.userType === "instructor"
-  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();

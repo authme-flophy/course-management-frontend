@@ -8,7 +8,6 @@ const LessonPage = () => {
   const [lesson, setLesson] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEnrolled, setIsEnrolled] = useState(false);
   const token = useSelector((state) => state.auth.token);
   const isInstructor = useSelector(
     (state) => state.auth.user?.user_type === "instructor"
@@ -31,7 +30,6 @@ const LessonPage = () => {
         );
 
         const isUserEnrolled = enrollmentResponse.data.is_enrolled;
-        setIsEnrolled(isUserEnrolled);
 
         // Only fetch lesson if user is enrolled or is an instructor
         if (isUserEnrolled || isInstructor) {
@@ -127,8 +125,7 @@ const LessonPage = () => {
             <button
               onClick={() =>
                 navigate(
-                  `/courses/${courseId}/lessons/${
-                    lessons[currentLessonIndex - 1].id
+                  `/courses/${courseId}/lessons/${lessons[currentLessonIndex - 1].id
                   }`
                 )
               }
@@ -155,8 +152,7 @@ const LessonPage = () => {
             <button
               onClick={() =>
                 navigate(
-                  `/courses/${courseId}/lessons/${
-                    lessons[currentLessonIndex + 1].id
+                  `/courses/${courseId}/lessons/${lessons[currentLessonIndex + 1].id
                   }`
                 )
               }

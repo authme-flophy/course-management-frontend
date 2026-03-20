@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import LessonForm from "./LessonForm";
 
 const CourseDetails = () => {
   const { courseId } = useParams();
@@ -10,12 +9,10 @@ const CourseDetails = () => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const token = useSelector((state) => state.auth.token);
-  const userRole = useSelector((state) => state.auth.user?.role);
   const [lessons, setLessons] = useState([]);
   const isInstructor = useSelector(
     (state) => state.auth.user?.user_type === "instructor"
   );
-  const [showLessonForm, setShowLessonForm] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
 
   console.log("Is instructor:", isInstructor);
@@ -130,11 +127,6 @@ const CourseDetails = () => {
     }
   };
 
-  const handleLessonCreated = (newLesson) => {
-    setLessons([...lessons, newLesson]);
-    setShowLessonForm(false);
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -215,24 +207,8 @@ const CourseDetails = () => {
           <div className="mb-6">
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl font-semibold">Lessons</h2>
-              {isInstructor && !showLessonForm && (
-                <button
-                  onClick={() => setShowLessonForm(true)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  Add Lesson
-                </button>
-              )}
             </div>
 
-            {showLessonForm && (
-              <LessonForm
-                courseId={courseId}
-                token={token}
-                onLessonCreated={handleLessonCreated}
-                onCancel={() => setShowLessonForm(false)}
-              />
-            )}
 
             {lessons.length > 0 ? (
               <div className="space-y-4">
@@ -276,11 +252,10 @@ const CourseDetails = () => {
           {!isInstructor && (
             <button
               onClick={course.is_enrolled ? handleUnenroll : handleEnroll}
-              className={`w-full py-3 px-6 rounded-lg text-white font-semibold transition duration-200 ${
-                course.is_enrolled
-                  ? "bg-red-500 hover:bg-red-600"
-                  : "bg-blue-500 hover:bg-blue-600"
-              }`}
+              className={`w-full py-3 px-6 rounded-lg text-white font-semibold transition duration-200 ${course.is_enrolled
+                ? "bg-red-500 hover:bg-red-600"
+                : "bg-blue-500 hover:bg-blue-600"
+                }`}
             >
               {course.is_enrolled ? (
                 <span className="flex items-center justify-center">

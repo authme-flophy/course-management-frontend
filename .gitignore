@@ -82,3 +82,11 @@ webpack-stats.json
 # Optional lock files (uncomment based on package manager)
 # package-lock.json
 # yarn.lock
+
+# Agent workflows and config
+.agents/
+
+# Local API docs and user manuals
+api_docs_course_detail.md
+enrollment-api-docs.md
+USER_MANUAL.md

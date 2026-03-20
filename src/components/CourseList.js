@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchCourses } from "../store/courseSlice";
+import { fetchCourses } from "../features/courses/courseSlice";
 
 const CourseList = () => {
   const dispatch = useDispatch();

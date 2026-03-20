@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
   LineChart,
@@ -11,62 +10,46 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import CreateCourseModal from "../features/courses/components/CreateCourseModal";
+import {
+  fetchInstructorDashboard,
+  fetchInstructorCourseInsights,
+  clearCourseInsights,
+  selectInstructorDashboard,
+  selectInstructorCourseInsights,
+} from "../features/courses/courseSlice";
 
 const InstructorDashboard = () => {
-  const [dashboardData, setDashboardData] = useState(null);
+  const dispatch = useDispatch();
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [courseDetails, setCourseDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const token = useSelector((state) => state.auth.token);
+  const [isCreateCourseModalOpen, setIsCreateCourseModalOpen] = useState(false);
+
+  const dashboardData = useSelector(selectInstructorDashboard);
+  const courseDetails = useSelector(selectInstructorCourseInsights);
+  const isLoading = useSelector((state) => state.courses.isLoading);
+  const error = useSelector((state) => state.courses.error);
+
+  const fetchDashboardData = useCallback(() => {
+    dispatch(fetchInstructorDashboard());
+  }, [dispatch]);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:8000/api/instructor/dashboard/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setDashboardData(response.data);
-        setIsLoading(false);
-      } catch (error) {
-        setError(
-          error.response?.data?.message || "Failed to fetch dashboard data"
-        );
-        setIsLoading(false);
-      }
-    };
-
     fetchDashboardData();
-  }, [token]);
+  }, [fetchDashboardData]);
 
   useEffect(() => {
-    const fetchCourseDetails = async () => {
-      if (!selectedCourse) return;
+    if (!selectedCourse) {
+      dispatch(clearCourseInsights());
+      return;
+    }
 
-      try {
-        const response = await axios.get(
-          `http://localhost:8000/api/instructor/courses/${selectedCourse}/details/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setCourseDetails(response.data);
-      } catch (error) {
-        setError(
-          error.response?.data?.message || "Failed to fetch course details"
-        );
-      }
-    };
+    dispatch(fetchInstructorCourseInsights(selectedCourse));
+  }, [selectedCourse, dispatch]);
 
-    fetchCourseDetails();
-  }, [selectedCourse, token]);
+  const handleCourseCreated = () => {
+    setIsCreateCourseModalOpen(false);
+    fetchDashboardData(); // Refetch dashboard to show the new course
+  };
 
   // Transform enrollment trends data for the chart
   const transformEnrollmentTrends = (trends) => {
@@ -96,6 +79,17 @@ const InstructorDashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Action Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-2xl font-bold text-gray-900">Instructor Dashboard</h2>
+        <button
+          onClick={() => setIsCreateCourseModalOpen(true)}
+          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          Create New Course
+        </button>
+      </div>
+
       {/* Overview Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
@@ -234,7 +228,7 @@ const InstructorDashboard = () => {
               </h3>
               <button
                 onClick={() => setSelectedCourse(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 rounded"
               >
                 <svg
                   className="h-6 w-6"
@@ -285,6 +279,13 @@ const InstructorDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Create Course Modal */}
+      <CreateCourseModal
+        isOpen={isCreateCourseModalOpen}
+        onClose={() => setIsCreateCourseModalOpen(false)}
+        onSuccess={handleCourseCreated}
+      />
     </div>
   );
 };

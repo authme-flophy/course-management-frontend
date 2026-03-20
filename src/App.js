@@ -14,6 +14,8 @@ import Navigation from "./components/Navigation";
 import LessonPage from "./components/LessonPage";
 import InstructorDashboard from "./components/InstructorDashboard";
 import CourseDetailsPage from "./components/dashboard/CourseDetailsPage";
+import CreateLessonPage from "./features/courses/components/CreateLessonPage";
+import EnrollStudentPage from "./features/courses/components/EnrollStudentPage";
 
 const PrivateRoute = ({ element: Element, ...rest }) => {
   const token = useSelector((state) => state.auth.token);
@@ -54,6 +56,14 @@ function App() {
           <Route
             path="/instructor/courses/:courseId"
             element={<PrivateRoute element={CourseDetailsPage} />}
+          />
+          <Route
+            path="/instructor/courses/:courseId/lessons/new"
+            element={<PrivateRoute element={CreateLessonPage} />}
+          />
+          <Route
+            path="/instructor/courses/:courseId/enroll"
+            element={<PrivateRoute element={EnrollStudentPage} />}
           />
           <Route path="/" element={<Navigate to={defaultRedirect} />} />
           <Route path="*" element={<Navigate to={defaultRedirect} />} />

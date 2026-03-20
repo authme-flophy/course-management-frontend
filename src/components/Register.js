@@ -1,22 +1,21 @@
-// File: course-management-frontend/src/components/Register.js
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { register } from "../store/authSlice";
+import { register, selectAuthIsLoading, selectAuthError } from "../store/authSlice";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState("student");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isLoading, error } = useSelector((state) => state.auth);
+  const isLoading = useSelector(selectAuthIsLoading);
+  const error = useSelector(selectAuthError);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const result = await dispatch(
-      register({ username, email, password, user_type: userType })
+      register({ username, email, password, user_type: "student" })
     );
     if (!result.error) {
       navigate("/courses");
@@ -63,22 +62,6 @@ const Register = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-            </div>
-            <div>
-              <label htmlFor="user_type" className="sr-only">
-                User Type
-              </label>
-              <select
-                id="user_type"
-                name="user_type"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                value={userType}
-                onChange={(e) => setUserType(e.target.value)}
-              >
-                <option value="student">Student</option>
-                <option value="instructor">Instructor</option>
-              </select>
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
